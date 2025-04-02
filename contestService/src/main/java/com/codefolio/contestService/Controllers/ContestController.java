@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/contests")
+@RequestMapping("/contests")
 public class ContestController {
     private final ContestService contestService;
 
@@ -19,11 +19,13 @@ public class ContestController {
 
     @GetMapping("/upcoming")
     public ResponseEntity<List<Contest>> getUpcomingContests() {
-        return ResponseEntity.ok(contestService.getUpcomingContests());
+        List<Contest> contests = contestService.getUpcomingContests();
+        return ResponseEntity.ok(contests);
     }
 
     @GetMapping("/ongoing")
     public ResponseEntity<List<Contest>> getOngoingContests() {
-        return ResponseEntity.ok(contestService.getOngoingContests());
+        List<Contest> contests = contestService.getOngoingContests();
+        return ResponseEntity.ok(contests);
     }
 }
