@@ -6,5 +6,5 @@ import java.util.List;
 @Data
 public class CodeforcesResponse {
     private String status;
-    private List<Contest> result;
+    private List<CodeforcesContest> result;
 } 
