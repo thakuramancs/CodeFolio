@@ -19,13 +19,11 @@ public class ContestController {
 
     @GetMapping("/upcoming")
     public ResponseEntity<List<Contest>> getUpcomingContests() {
-        List<Contest> contests = contestService.getUpcomingContests();
-        return ResponseEntity.ok(contests);
+        return ResponseEntity.ok(contestService.getUpcomingContests());
     }
 
     @GetMapping("/ongoing")
     public ResponseEntity<List<Contest>> getOngoingContests() {
-        List<Contest> contests = contestService.getOngoingContests();
-        return ResponseEntity.ok(contests);
+        return ResponseEntity.ok(contestService.getOngoingContests());
     }
 }
