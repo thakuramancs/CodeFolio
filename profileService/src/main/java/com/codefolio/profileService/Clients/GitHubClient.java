@@ -5,12 +5,10 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
-import com.codefolio.profileService.config.GitHubClientConfig;
 
 @FeignClient(
     name = "github-api", 
-    url = "${github.api.url:https://api.github.com}",
-    configuration = GitHubClientConfig.class
+    url = "${github.api.url:https://api.github.com}"
 )
 public interface GitHubClient {
     

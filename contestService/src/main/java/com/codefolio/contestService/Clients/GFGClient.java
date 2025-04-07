@@ -2,22 +2,23 @@ package com.codefolio.contestService.Clients;
 
 import com.codefolio.contestService.model.GFGContest;
 import com.codefolio.contestService.model.GFGResponse;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.web.client.RestTemplate;
 @Component
 public class GFGClient {
     private static final Logger logger = LoggerFactory.getLogger(GFGClient.class);
-    private static final String GFG_CONTESTS_URL = "https://practice.geeksforgeeks.org/events";
+    private static final String GFG_URL = "https://practiceapi.geeksforgeeks.org/api/v1/events?type=contest";
     
     public GFGResponse getActiveContests() {
         logger.info("Fetching active contests from GeeksforGeeks");
@@ -25,55 +26,83 @@ public class GFGClient {
         List<GFGContest> contests = new ArrayList<>();
         
         try {
-            logger.debug("Connecting to GeeksforGeeks contests page");
-            Document doc = Jsoup.connect(GFG_CONTESTS_URL)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                    .get();
-
-            Elements contestCards = doc.select("div.card");
-            logger.debug("Found {} contest cards", contestCards.size());
+            URL url = new URL(GFG_URL);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+            conn.setRequestProperty("Accept", "application/json");
             
-            for (Element card : contestCards) {
-                Element titleElement = card.selectFirst("h4.card-title");
-                Element timeElement = card.selectFirst("div.card-text");
-                Element linkElement = card.selectFirst("a.btn");
+            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                in.close();
                 
-                if (titleElement != null) {
-                    String title = titleElement.text().trim();
-                    String description = timeElement != null ? timeElement.text().trim() : "";
-                    String url = linkElement != null ? linkElement.attr("href") : "";
+                JSONObject jsonResponse = new JSONObject(content.toString());
+                JSONArray events = jsonResponse.getJSONArray("results");
+                
+                for (int i = 0; i < events.length(); i++) {
+                    JSONObject event = events.getJSONObject(i);
+                    String status = event.optString("status", "").toLowerCase();
                     
-                    if (!url.startsWith("http")) {
-                        url = "https://practice.geeksforgeeks.org" + url;
+                    if (status.contains("active") || status.contains("ongoing")) {
+                        String title = event.optString("name", "");
+                        String description = event.optString("description", "");
+                        String eventUrl = event.optString("register_url", "");
+                        
+                        if (!title.isEmpty()) {
+                            if (!eventUrl.startsWith("http")) {
+                                eventUrl = "https://practice.geeksforgeeks.org" + eventUrl;
+                            }
+                            
+                            long startTime = System.currentTimeMillis();
+                            long duration = TimeUnit.DAYS.toMillis(7);
+                            
+                            String startTimeStr = event.optString("start_time", "");
+                            String endTimeStr = event.optString("end_time", "");
+                            
+                            try {
+                                if (!startTimeStr.isEmpty()) {
+                                    startTime = Long.parseLong(startTimeStr) * 1000L;
+                                }
+                                if (!endTimeStr.isEmpty()) {
+                                    long endTime = Long.parseLong(endTimeStr) * 1000L;
+                                    duration = endTime - startTime;
+                                }
+                            } catch (NumberFormatException e) {
+                                logger.warn("Failed to parse time for contest {}", title);
+                            }
+                            
+                            GFGContest contest = new GFGContest(
+                                Math.abs(title.hashCode()),
+                                title,
+                                "GeeksforGeeks",
+                                startTime,
+                                duration,
+                                eventUrl,
+                                description,
+                                "ACTIVE"
+                            );
+                            
+                            contests.add(contest);
+                            logger.info("Added contest: {}", title);
+                        }
                     }
-                    
-                    long currentTime = System.currentTimeMillis();
-                    long duration = TimeUnit.DAYS.toMillis(30); // Default duration
-                    
-                    GFGContest contest = new GFGContest(
-                        Math.abs(title.hashCode()),  // id
-                        title,                       // name
-                        "GeeksforGeeks",            // platform
-                        currentTime,                // startTime
-                        duration,                   // duration
-                        url,                        // url
-                        description,                // description
-                        "ACTIVE"                    // status
-                    );
-                    
-                    contests.add(contest);
-                    logger.debug("Added contest: {}", title);
                 }
             }
             
+            conn.disconnect();
             response.setActiveContests(contests);
             response.setStatus("SUCCESS");
             logger.info("Successfully fetched {} contests", contests.size());
             
-        } catch (IOException e) {
-            logger.error("Failed to fetch contests from GeeksforGeeks: {}", e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Failed to fetch contests: {}", e.getMessage());
             response.setStatus("ERROR");
-            response.setMessage("Failed to fetch contests: " + e.getMessage());
+            response.setMessage(e.getMessage());
         }
         
         return response;

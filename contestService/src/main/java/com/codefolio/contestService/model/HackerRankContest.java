@@ -14,8 +14,6 @@ public class HackerRankContest extends Contest {
     private String status;
     
     public HackerRankContest(int id, String name, String platform, long startTime, long duration, String url, String description, String status) {
-        super(id, name, platform, startTime, duration, url);
-        this.description = description;
-        this.status = status;
+        super(id, name, platform, startTime, duration, url, description, status);
     }
 } 

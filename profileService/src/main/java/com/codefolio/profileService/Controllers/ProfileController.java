@@ -2,11 +2,11 @@ package com.codefolio.profileService.Controllers;
 
 import com.codefolio.profileService.Clients.GitHubClient;
 import com.codefolio.profileService.model.GitHubProfile;
-import feign.FeignException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
+import feign.FeignException;    
 
 @Slf4j
 @RestController

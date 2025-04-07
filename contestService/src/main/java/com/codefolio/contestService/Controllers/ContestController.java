@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/contests")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class ContestController {
     private final ContestService contestService;
 
@@ -17,13 +18,23 @@ public class ContestController {
         this.contestService = contestService;
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<List<Contest>> getActiveContests() {
+        return ResponseEntity.ok(contestService.getActiveContests());
+    }
+
+    @GetMapping("/ongoing")
+    public ResponseEntity<List<Contest>> getOngoingContests() {
+        return ResponseEntity.ok(contestService.getActiveContests());
+    }
+
     @GetMapping("/upcoming")
     public ResponseEntity<List<Contest>> getUpcomingContests() {
         return ResponseEntity.ok(contestService.getUpcomingContests());
     }
 
-    @GetMapping("/ongoing")
-    public ResponseEntity<List<Contest>> getOngoingContests() {
-        return ResponseEntity.ok(contestService.getOngoingContests());
+    @GetMapping("/all")
+    public ResponseEntity<List<Contest>> getAllContests() {
+        return ResponseEntity.ok(contestService.getAllContests());
     }
 }
