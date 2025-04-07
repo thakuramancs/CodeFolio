@@ -1,16 +1,10 @@
 package com.codefolio.contestService.model;
 
-import lombok.Data;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.NoArgsConstructor;
 
-@Data
-public class CodeChefContest {
-    @JsonProperty("contest_code")
-    private String code;
-    @JsonProperty("contest_name")
-    private String name;
-    @JsonProperty("contest_start_date_iso")
-    private String startDate;
-    @JsonProperty("contest_end_date_iso")
-    private String endDate;
+@NoArgsConstructor
+public class CodeChefContest extends Contest {
+    public CodeChefContest(int id, String name, String platform, long startTime, long duration, String url, String description, String status) {
+        super(id, name, platform, startTime, duration, url, description, status);
+    }
 } 

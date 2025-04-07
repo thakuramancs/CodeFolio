@@ -5,8 +5,7 @@ import java.util.List;
 
 @Data
 public class CodeChefResponse {
+    private List<CodeChefContest> activeContests;
     private String status;
     private String message;
-    private List<CodeChefContest> presentContests;
-    private List<CodeChefContest> futureContests;
 } 

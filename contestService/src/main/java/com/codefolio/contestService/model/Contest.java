@@ -1,10 +1,15 @@
 package com.codefolio.contestService.model;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder(access = AccessLevel.PUBLIC)
 @NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class Contest {
     private int id;
     private String name;
@@ -12,13 +17,6 @@ public class Contest {
     private long startTime;
     private long duration;
     private String url;
-
-    public Contest(int id, String name, String platform, long startTime, long duration, String url) {
-        this.id = id;
-        this.name = name;
-        this.platform = platform;
-        this.startTime = startTime;
-        this.duration = duration;
-        this.url = url;
-    }
+    private String description;
+    private String status;
 }
