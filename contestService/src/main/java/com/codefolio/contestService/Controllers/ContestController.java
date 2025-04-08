@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/contests")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class ContestController {
     private final ContestService contestService;
 
@@ -20,11 +19,6 @@ public class ContestController {
 
     @GetMapping("/active")
     public ResponseEntity<List<Contest>> getActiveContests() {
-        return ResponseEntity.ok(contestService.getActiveContests());
-    }
-
-    @GetMapping("/ongoing")
-    public ResponseEntity<List<Contest>> getOngoingContests() {
         return ResponseEntity.ok(contestService.getActiveContests());
     }
 
