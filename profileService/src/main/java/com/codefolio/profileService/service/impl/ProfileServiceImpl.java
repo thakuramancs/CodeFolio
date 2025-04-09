@@ -3,8 +3,9 @@ package com.codefolio.profileService.service.impl;
 import com.codefolio.profileService.model.Profile;
 import com.codefolio.profileService.repository.ProfileRepository;
 import com.codefolio.profileService.service.ProfileService;
-import com.codefolio.profileService.dto.AggregateStats;
 import com.codefolio.profileService.client.LeetCodeClient;
+import com.codefolio.profileService.client.CodeforcesClient;
+import com.codefolio.profileService.client.CodeChefClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import java.time.LocalDateTime;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service("profileService")
 public class ProfileServiceImpl implements ProfileService {
@@ -19,10 +21,14 @@ public class ProfileServiceImpl implements ProfileService {
     private static final Logger log = LoggerFactory.getLogger(ProfileServiceImpl.class);
     private final ProfileRepository profileRepository;
     private final LeetCodeClient leetCodeClient;
+    private final CodeforcesClient codeforcesClient;
+    private final CodeChefClient codeChefClient;
 
-    public ProfileServiceImpl(ProfileRepository profileRepository, LeetCodeClient leetCodeClient) {
+    public ProfileServiceImpl(ProfileRepository profileRepository, LeetCodeClient leetCodeClient, CodeforcesClient codeforcesClient, CodeChefClient codeChefClient) {
         this.profileRepository = profileRepository;
         this.leetCodeClient = leetCodeClient;
+        this.codeforcesClient = codeforcesClient;
+        this.codeChefClient = codeChefClient;
     }
 
     @Override
@@ -112,18 +118,6 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public AggregateStats getAggregateStats(String userId) {
-        log.info("Fetching aggregate stats for user: {}", userId);
-        Profile profile = getProfile(userId);
-        AggregateStats stats = new AggregateStats();
-        
-        stats.setTotalProblemsSolved(profile.getTotalProblemsSolved());
-        stats.setTotalContestsJoined(profile.getTotalContestsJoined());
-        stats.setLeetcodeProblemsSolved(profile.getLeetcodeTotalSolved());
-        return stats;
-    }
-
-    @Override
     public Profile updateLeetCodeProfile(String userId, String username) {
         log.info("Updating LeetCode profile for user: {}", userId);
         if (username == null || username.trim().isEmpty()) {
@@ -199,11 +193,72 @@ public class ProfileServiceImpl implements ProfileService {
                 }
             }
             
-            profile.setTotalProblemsSolved(profile.getLeetcodeTotalSolved());
+            profile.setLeetcodeTotalSolved(profile.getLeetcodeTotalSolved());
             
         } catch (Exception e) {
             log.error("Error updating LeetCode stats for user: {}", profile.getUserId(), e);
             throw new RuntimeException("Failed to update LeetCode stats: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public Map<String, Object> getCodeforcesProfile(String handle) {
+        log.info("Fetching CodeForces profile for handle: {}", handle);
+        try {
+            JSONObject userInfo = new JSONObject(codeforcesClient.getUserInfo(handle));
+            JSONObject ratingInfo = new JSONObject(codeforcesClient.getUserRating(handle));
+            
+            if (userInfo.has("status") && !userInfo.getString("status").equals("OK")) {
+                throw new RuntimeException("CodeForces API error: " + userInfo.getString("comment"));
+            }
+            
+            JSONObject result = userInfo.getJSONArray("result").getJSONObject(0);
+            return Map.of(
+                "handle", result.getString("handle"),
+                "rating", result.optInt("rating", 0),
+                "rank", result.optString("rank", "unrated"),
+                "maxRating", result.optInt("maxRating", 0),
+                "contribution", result.optInt("contribution", 0),
+                "contestCount", ratingInfo.getJSONArray("result").length()
+            );
+        } catch (Exception e) {
+            log.error("Error fetching CodeForces profile: {}", e.getMessage());
+            throw new RuntimeException("Failed to fetch CodeForces profile: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Profile updateCodeforcesProfile(String userId, String handle) {
+        log.info("Updating CodeForces profile for user: {}", userId);
+        if (handle == null || handle.trim().isEmpty()) {
+            throw new IllegalArgumentException("CodeForces handle cannot be empty");
+        }
+
+        Profile profile = getProfile(userId);
+        profile.setCodeforcesUsername(handle);
+        
+        try {
+            Map<String, Object> cfProfile = getCodeforcesProfile(handle);
+            profile.setCodeforcesRating((Integer) cfProfile.get("rating"));
+            profile.setCodeforcesRank((String) cfProfile.get("rank"));
+            profile.setCodeforcesContestCount((Integer) cfProfile.get("contestCount"));
+            
+            // Update last updated timestamp
+            profile.setLastUpdated(LocalDateTime.now());
+            
+            return profileRepository.save(profile);
+        } catch (Exception e) {
+            log.error("Failed to update CodeForces profile for user: {}", userId, e);
+            throw new RuntimeException("Failed to update CodeForces profile: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public JSONObject getCodeChefProfile(String userId) {
+        Profile profile = getProfile(userId);
+        if (profile.getCodechefUsername() == null || profile.getCodechefUsername().isEmpty()) {
+            throw new RuntimeException("CodeChef username not set for user");
+        }
+        return codeChefClient.getUserProfile(profile.getCodechefUsername());
     }
 } 
