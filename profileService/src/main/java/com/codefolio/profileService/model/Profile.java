@@ -26,55 +26,37 @@ public class Profile {
     private String hackerrankUsername;
     private String geeksforgeeksUsername;
 
-    // LeetCode specific fields
-    private Integer leetcodeTotalSolved;
-    private Integer leetcodeEasySolved;
-    private Integer leetcodeMediumSolved;
-    private Integer leetcodeHardSolved;
-    private Integer leetcodeContestsJoined;
-    private Integer leetcodeRating;
+    // LeetCode stats
+    private Integer leetcodeTotalSolved = 0;
+    private Integer leetcodeEasySolved = 0;
+    private Integer leetcodeMediumSolved = 0;
+    private Integer leetcodeHardSolved = 0;
+    private Integer leetcodeRating = 0;
 
-    // Aggregate stats
-    private Integer totalProblemsSolved;
-    private Integer totalContestsJoined;
+    // CodeForces stats
+    private Integer codeforcesRating = 0;
+    private String codeforcesRank;
+    private Integer codeforcesSolvedCount = 0;
+    private Integer codeforcesContestCount = 0;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     private LocalDateTime lastUpdated;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        initializeStats();
+        lastUpdated = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
         lastUpdated = LocalDateTime.now();
     }
 
-    public Profile() {
-        initializeStats();
-    }
+    public Profile() {}
 
     public Profile(String userId, String email, String name) {
         this.userId = userId;
         this.email = email;
         this.name = name;
-        initializeStats();
-    }
-
-    private void initializeStats() {
-        this.leetcodeTotalSolved = 0;
-        this.leetcodeEasySolved = 0;
-        this.leetcodeMediumSolved = 0;
-        this.leetcodeHardSolved = 0;
-        this.leetcodeContestsJoined = 0;
-        this.leetcodeRating = 0;
-        this.totalProblemsSolved = 0;
-        this.totalContestsJoined = 0;
     }
 
     // Getters and Setters
@@ -117,17 +99,20 @@ public class Profile {
     public Integer getLeetcodeHardSolved() { return leetcodeHardSolved; }
     public void setLeetcodeHardSolved(Integer leetcodeHardSolved) { this.leetcodeHardSolved = leetcodeHardSolved; }
 
-    public Integer getLeetcodeContestsJoined() { return leetcodeContestsJoined; }
-    public void setLeetcodeContestsJoined(Integer leetcodeContestsJoined) { this.leetcodeContestsJoined = leetcodeContestsJoined; }
-
     public Integer getLeetcodeRating() { return leetcodeRating; }
     public void setLeetcodeRating(Integer leetcodeRating) { this.leetcodeRating = leetcodeRating; }
 
-    public Integer getTotalProblemsSolved() { return totalProblemsSolved; }
-    public void setTotalProblemsSolved(Integer totalProblemsSolved) { this.totalProblemsSolved = totalProblemsSolved; }
+    public Integer getCodeforcesRating() { return codeforcesRating; }
+    public void setCodeforcesRating(Integer codeforcesRating) { this.codeforcesRating = codeforcesRating; }
 
-    public Integer getTotalContestsJoined() { return totalContestsJoined; }
-    public void setTotalContestsJoined(Integer totalContestsJoined) { this.totalContestsJoined = totalContestsJoined; }
+    public String getCodeforcesRank() { return codeforcesRank; }
+    public void setCodeforcesRank(String codeforcesRank) { this.codeforcesRank = codeforcesRank; }
+
+    public Integer getCodeforcesSolvedCount() { return codeforcesSolvedCount; }
+    public void setCodeforcesSolvedCount(Integer codeforcesSolvedCount) { this.codeforcesSolvedCount = codeforcesSolvedCount; }
+
+    public Integer getCodeforcesContestCount() { return codeforcesContestCount; }
+    public void setCodeforcesContestCount(Integer codeforcesContestCount) { this.codeforcesContestCount = codeforcesContestCount; }
 
     public LocalDateTime getLastUpdated() { return lastUpdated; }
     public void setLastUpdated(LocalDateTime lastUpdated) { this.lastUpdated = lastUpdated; }

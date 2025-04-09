@@ -1,19 +1,14 @@
 package com.codefolio.profileService.client;
 
 import org.json.JSONObject;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 @Component
 public class LeetCodeClient {
-    private static final String LEETCODE_API_URL = "https://leetcode.com/graphql";
-    private final RestTemplate restTemplate;
+    private final LeetCodeFeignClient leetCodeFeignClient;
 
-    public LeetCodeClient(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public LeetCodeClient(LeetCodeFeignClient leetCodeFeignClient) {
+        this.leetCodeFeignClient = leetCodeFeignClient;
     }
 
     public JSONObject getUserProfile(String username) {
@@ -46,17 +41,14 @@ public class LeetCodeClient {
             }
             """.formatted(username);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("User-Agent", "Mozilla/5.0");
-
         JSONObject requestBody = new JSONObject();
         requestBody.put("query", query);
 
-        HttpEntity<String> request = new HttpEntity<>(requestBody.toString(), headers);
-        
         try {
-            String response = restTemplate.postForObject(LEETCODE_API_URL, request, String.class);
+            String response = leetCodeFeignClient.getUserProfile(
+                "Mozilla/5.0",
+                requestBody.toString()
+            );
             return new JSONObject(response);
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch LeetCode profile: " + e.getMessage(), e);

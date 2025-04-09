@@ -1,8 +1,8 @@
 package com.codefolio.profileService.service;
 
 import com.codefolio.profileService.model.Profile;
-import com.codefolio.profileService.dto.AggregateStats;
 import java.util.Map;
+import org.json.JSONObject;
 
 public interface ProfileService {
     Profile createProfile(String userId, String email, String name);
@@ -10,6 +10,8 @@ public interface ProfileService {
     Profile updateProfile(String userId, Profile profile);
     void deleteProfile(String userId);
     Map<String, Object> getLeetCodeProfile(String username);
-    AggregateStats getAggregateStats(String userId);
     Profile updateLeetCodeProfile(String userId, String username);
+    Map<String, Object> getCodeforcesProfile(String handle);
+    Profile updateCodeforcesProfile(String userId, String handle);
+    JSONObject getCodeChefProfile(String userId);
 } 
