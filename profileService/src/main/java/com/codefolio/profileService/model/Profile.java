@@ -23,21 +23,76 @@ public class Profile {
     private String leetcodeUsername;
     private String codeforcesUsername;
     private String codechefUsername;
-    private String hackerrankUsername;
+    private String atcoderUsername;
     private String geeksforgeeksUsername;
+    private String githubUsername;
 
-    // LeetCode stats
-    private Integer leetcodeTotalSolved = 0;
-    private Integer leetcodeEasySolved = 0;
-    private Integer leetcodeMediumSolved = 0;
-    private Integer leetcodeHardSolved = 0;
-    private Integer leetcodeRating = 0;
+    // Platform statistics
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "totalQuestions", column = @Column(name = "leetcode_total_questions")),
+        @AttributeOverride(name = "totalActiveDays", column = @Column(name = "leetcode_active_days")),
+        @AttributeOverride(name = "totalContests", column = @Column(name = "leetcode_total_contests")),
+        @AttributeOverride(name = "rating", column = @Column(name = "leetcode_rating")),
+        @AttributeOverride(name = "contestRanking", column = @Column(name = "leetcode_contest_ranking")),
+        @AttributeOverride(name = "submissionCalendar", column = @Column(name = "leetcode_submission_calendar", columnDefinition = "TEXT")),
+        @AttributeOverride(name = "awards", column = @Column(name = "leetcode_awards", columnDefinition = "TEXT"))
+    })
+    private PlatformStats leetcodeStats = new PlatformStats();
 
-    // CodeForces stats
-    private Integer codeforcesRating = 0;
-    private String codeforcesRank;
-    private Integer codeforcesSolvedCount = 0;
-    private Integer codeforcesContestCount = 0;
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "totalQuestions", column = @Column(name = "codeforces_total_questions")),
+        @AttributeOverride(name = "totalActiveDays", column = @Column(name = "codeforces_active_days")),
+        @AttributeOverride(name = "totalContests", column = @Column(name = "codeforces_total_contests")),
+        @AttributeOverride(name = "rating", column = @Column(name = "codeforces_rating")),
+        @AttributeOverride(name = "contestRanking", column = @Column(name = "codeforces_contest_ranking")),
+        @AttributeOverride(name = "submissionCalendar", column = @Column(name = "codeforces_submission_calendar", columnDefinition = "TEXT")),
+        @AttributeOverride(name = "awards", column = @Column(name = "codeforces_awards", columnDefinition = "TEXT"))
+    })
+    private PlatformStats codeforcesStats = new PlatformStats();
+
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "totalQuestions", column = @Column(name = "codechef_total_questions")),
+        @AttributeOverride(name = "totalActiveDays", column = @Column(name = "codechef_active_days")),
+        @AttributeOverride(name = "totalContests", column = @Column(name = "codechef_total_contests")),
+        @AttributeOverride(name = "rating", column = @Column(name = "codechef_rating")),
+        @AttributeOverride(name = "contestRanking", column = @Column(name = "codechef_contest_ranking")),
+        @AttributeOverride(name = "submissionCalendar", column = @Column(name = "codechef_submission_calendar", columnDefinition = "TEXT")),
+        @AttributeOverride(name = "awards", column = @Column(name = "codechef_awards", columnDefinition = "TEXT"))
+    })
+    private PlatformStats codechefStats = new PlatformStats();
+
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "totalQuestions", column = @Column(name = "atcoder_total_questions")),
+        @AttributeOverride(name = "totalActiveDays", column = @Column(name = "atcoder_active_days")),
+        @AttributeOverride(name = "totalContests", column = @Column(name = "atcoder_total_contests")),
+        @AttributeOverride(name = "rating", column = @Column(name = "atcoder_rating")),
+        @AttributeOverride(name = "contestRanking", column = @Column(name = "atcoder_contest_ranking")),
+        @AttributeOverride(name = "submissionCalendar", column = @Column(name = "atcoder_submission_calendar", columnDefinition = "TEXT")),
+        @AttributeOverride(name = "awards", column = @Column(name = "atcoder_awards", columnDefinition = "TEXT"))
+    })
+    private PlatformStats atcoderStats = new PlatformStats();
+
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "totalQuestions", column = @Column(name = "geeksforgeeks_total_questions")),
+        @AttributeOverride(name = "totalActiveDays", column = @Column(name = "geeksforgeeks_active_days")),
+        @AttributeOverride(name = "totalContests", column = @Column(name = "geeksforgeeks_total_contests")),
+        @AttributeOverride(name = "rating", column = @Column(name = "geeksforgeeks_rating")),
+        @AttributeOverride(name = "contestRanking", column = @Column(name = "geeksforgeeks_contest_ranking")),
+        @AttributeOverride(name = "submissionCalendar", column = @Column(name = "geeksforgeeks_submission_calendar", columnDefinition = "TEXT")),
+        @AttributeOverride(name = "awards", column = @Column(name = "geeksforgeeks_awards", columnDefinition = "TEXT"))
+    })
+    private PlatformStats geeksforgeeksStats = new PlatformStats();
+
+    // GitHub stats
+    private Integer githubRepos;
+    private Integer githubStars;
+    private Integer githubFollowers;
+    private Integer githubFollowing;
 
     private LocalDateTime lastUpdated;
 
@@ -81,38 +136,66 @@ public class Profile {
     public String getCodechefUsername() { return codechefUsername; }
     public void setCodechefUsername(String codechefUsername) { this.codechefUsername = codechefUsername; }
 
-    public String getHackerrankUsername() { return hackerrankUsername; }
-    public void setHackerrankUsername(String hackerrankUsername) { this.hackerrankUsername = hackerrankUsername; }
+    public String getAtcoderUsername() { return atcoderUsername; }
+    public void setAtcoderUsername(String atcoderUsername) { this.atcoderUsername = atcoderUsername; }
 
     public String getGeeksforgeeksUsername() { return geeksforgeeksUsername; }
     public void setGeeksforgeeksUsername(String geeksforgeeksUsername) { this.geeksforgeeksUsername = geeksforgeeksUsername; }
 
-    public Integer getLeetcodeTotalSolved() { return leetcodeTotalSolved; }
-    public void setLeetcodeTotalSolved(Integer leetcodeTotalSolved) { this.leetcodeTotalSolved = leetcodeTotalSolved; }
+    public PlatformStats getLeetcodeStats() { return leetcodeStats; }
+    public void setLeetcodeStats(PlatformStats leetcodeStats) { this.leetcodeStats = leetcodeStats; }
 
-    public Integer getLeetcodeEasySolved() { return leetcodeEasySolved; }
-    public void setLeetcodeEasySolved(Integer leetcodeEasySolved) { this.leetcodeEasySolved = leetcodeEasySolved; }
+    public PlatformStats getCodeforcesStats() { return codeforcesStats; }
+    public void setCodeforcesStats(PlatformStats codeforcesStats) { this.codeforcesStats = codeforcesStats; }
 
-    public Integer getLeetcodeMediumSolved() { return leetcodeMediumSolved; }
-    public void setLeetcodeMediumSolved(Integer leetcodeMediumSolved) { this.leetcodeMediumSolved = leetcodeMediumSolved; }
+    public PlatformStats getCodechefStats() { return codechefStats; }
+    public void setCodechefStats(PlatformStats codechefStats) { this.codechefStats = codechefStats; }
 
-    public Integer getLeetcodeHardSolved() { return leetcodeHardSolved; }
-    public void setLeetcodeHardSolved(Integer leetcodeHardSolved) { this.leetcodeHardSolved = leetcodeHardSolved; }
+    public PlatformStats getAtcoderStats() { return atcoderStats; }
+    public void setAtcoderStats(PlatformStats atcoderStats) { this.atcoderStats = atcoderStats; }
 
-    public Integer getLeetcodeRating() { return leetcodeRating; }
-    public void setLeetcodeRating(Integer leetcodeRating) { this.leetcodeRating = leetcodeRating; }
+    public PlatformStats getGeeksforgeeksStats() { return geeksforgeeksStats; }
+    public void setGeeksforgeeksStats(PlatformStats geeksforgeeksStats) { this.geeksforgeeksStats = geeksforgeeksStats; }
 
-    public Integer getCodeforcesRating() { return codeforcesRating; }
-    public void setCodeforcesRating(Integer codeforcesRating) { this.codeforcesRating = codeforcesRating; }
+    public String getGithubUsername() {
+        return githubUsername;
+    }
 
-    public String getCodeforcesRank() { return codeforcesRank; }
-    public void setCodeforcesRank(String codeforcesRank) { this.codeforcesRank = codeforcesRank; }
+    public void setGithubUsername(String githubUsername) {
+        this.githubUsername = githubUsername;
+    }
 
-    public Integer getCodeforcesSolvedCount() { return codeforcesSolvedCount; }
-    public void setCodeforcesSolvedCount(Integer codeforcesSolvedCount) { this.codeforcesSolvedCount = codeforcesSolvedCount; }
+    public Integer getGithubRepos() {
+        return githubRepos;
+    }
 
-    public Integer getCodeforcesContestCount() { return codeforcesContestCount; }
-    public void setCodeforcesContestCount(Integer codeforcesContestCount) { this.codeforcesContestCount = codeforcesContestCount; }
+    public void setGithubRepos(Integer githubRepos) {
+        this.githubRepos = githubRepos;
+    }
+
+    public Integer getGithubStars() {
+        return githubStars;
+    }
+
+    public void setGithubStars(Integer githubStars) {
+        this.githubStars = githubStars;
+    }
+
+    public Integer getGithubFollowers() {
+        return githubFollowers;
+    }
+
+    public void setGithubFollowers(Integer githubFollowers) {
+        this.githubFollowers = githubFollowers;
+    }
+
+    public Integer getGithubFollowing() {
+        return githubFollowing;
+    }
+
+    public void setGithubFollowing(Integer githubFollowing) {
+        this.githubFollowing = githubFollowing;
+    }
 
     public LocalDateTime getLastUpdated() { return lastUpdated; }
     public void setLastUpdated(LocalDateTime lastUpdated) { this.lastUpdated = lastUpdated; }

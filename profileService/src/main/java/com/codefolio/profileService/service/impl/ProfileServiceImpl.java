@@ -1,19 +1,30 @@
 package com.codefolio.profileService.service.impl;
 
 import com.codefolio.profileService.model.Profile;
+import com.codefolio.profileService.model.PlatformStats;
 import com.codefolio.profileService.repository.ProfileRepository;
 import com.codefolio.profileService.service.ProfileService;
 import com.codefolio.profileService.client.LeetCodeClient;
 import com.codefolio.profileService.client.CodeforcesClient;
 import com.codefolio.profileService.client.CodeChefClient;
+import com.codefolio.profileService.client.AtCoderClient;
+import com.codefolio.profileService.client.GeeksForGeeksClient;
+import com.codefolio.profileService.client.GitHubClient;
+import com.codefolio.profileService.dto.PlatformStatsDTO;
+import com.codefolio.profileService.dto.GitHubStatsDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import java.util.Objects;
 
 @Service("profileService")
 public class ProfileServiceImpl implements ProfileService {
@@ -23,12 +34,18 @@ public class ProfileServiceImpl implements ProfileService {
     private final LeetCodeClient leetCodeClient;
     private final CodeforcesClient codeforcesClient;
     private final CodeChefClient codeChefClient;
+    private final AtCoderClient atcoderClient;
+    private final GeeksForGeeksClient geeksForGeeksClient;
+    private final GitHubClient gitHubClient;
 
-    public ProfileServiceImpl(ProfileRepository profileRepository, LeetCodeClient leetCodeClient, CodeforcesClient codeforcesClient, CodeChefClient codeChefClient) {
+    public ProfileServiceImpl(ProfileRepository profileRepository, LeetCodeClient leetCodeClient, CodeforcesClient codeforcesClient, CodeChefClient codeChefClient, AtCoderClient atcoderClient, GeeksForGeeksClient geeksForGeeksClient, GitHubClient gitHubClient) {
         this.profileRepository = profileRepository;
         this.leetCodeClient = leetCodeClient;
         this.codeforcesClient = codeforcesClient;
         this.codeChefClient = codeChefClient;
+        this.atcoderClient = atcoderClient;
+        this.geeksForGeeksClient = geeksForGeeksClient;
+        this.gitHubClient = gitHubClient;
     }
 
     @Override
@@ -53,39 +70,154 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public Profile updateProfile(String userId, Profile profile) {
-        log.info("Updating profile for user: {}", userId);
-        Profile existingProfile = getProfile(userId);
+    @Transactional
+    public Profile updateProfile(String userId) {
+        log.info("Updating profile stats for user: {}", userId);
+        Profile profile = getProfile(userId);
         
-        // Update basic info
-        existingProfile.setName(profile.getName());
-        existingProfile.setEmail(profile.getEmail());
-        
-        // Update platform usernames
-        existingProfile.setLeetcodeUsername(profile.getLeetcodeUsername());
-        existingProfile.setCodeforcesUsername(profile.getCodeforcesUsername());
-        existingProfile.setCodechefUsername(profile.getCodechefUsername());
-        existingProfile.setHackerrankUsername(profile.getHackerrankUsername());
-        existingProfile.setGeeksforgeeksUsername(profile.getGeeksforgeeksUsername());
-        
-        // If LeetCode username has changed, update LeetCode stats
-        if (hasLeetCodeUsernameChanged(existingProfile.getLeetcodeUsername(), profile.getLeetcodeUsername())) {
+        // Update stats for all platforms if usernames exist
+        if (profile.getLeetcodeUsername() != null) {
             try {
-                updateLeetCodeStats(existingProfile);
+                PlatformStatsDTO leetcodeStats = leetCodeClient.getUserProfile(profile.getLeetcodeUsername());
+                updatePlatformStats(profile.getLeetcodeStats(), leetcodeStats);
             } catch (Exception e) {
-                log.warn("Failed to update LeetCode stats: {}", e.getMessage());
-                // Continue with profile update even if stats update fails
+                log.error("Failed to update LeetCode stats", e);
             }
         }
         
-        existingProfile.setLastUpdated(LocalDateTime.now());
-        return profileRepository.save(existingProfile);
+        if (profile.getCodeforcesUsername() != null) {
+            try {
+                PlatformStatsDTO codeforcesStats = codeforcesClient.getUserProfile(profile.getCodeforcesUsername());
+                updatePlatformStats(profile.getCodeforcesStats(), codeforcesStats);
+            } catch (Exception e) {
+                log.error("Failed to update CodeForces stats", e);
+            }
+        }
+        
+        if (profile.getCodechefUsername() != null) {
+            try {
+                PlatformStatsDTO codechefStats = codeChefClient.getUserProfile(profile.getCodechefUsername());
+                updatePlatformStats(profile.getCodechefStats(), codechefStats);
+            } catch (Exception e) {
+                log.error("Failed to update CodeChef stats", e);
+            }
+        }
+        
+        profile.setLastUpdated(LocalDateTime.now());
+        return profileRepository.save(profile);
     }
 
-    private boolean hasLeetCodeUsernameChanged(String oldUsername, String newUsername) {
-        if (oldUsername == null && newUsername == null) return false;
-        if (oldUsername == null || newUsername == null) return true;
-        return !oldUsername.equals(newUsername);
+    @Override
+    @Transactional
+    public Profile updateProfile(String userId, Profile updatedProfile) {
+        log.info("Starting profile update for user: {} with data: {}", userId, updatedProfile);
+        Profile existingProfile = getProfile(userId);
+        log.info("Found existing profile with CodeChef username: {}", existingProfile.getCodechefUsername());
+        
+        boolean needsStatsUpdate = false;
+        
+        // Update basic info
+        existingProfile.setName(updatedProfile.getName());
+        existingProfile.setEmail(updatedProfile.getEmail());
+        
+        // Update platform usernames
+        String oldCodeChef = existingProfile.getCodechefUsername();
+        String newCodeChef = updatedProfile.getCodechefUsername();
+        if (!Objects.equals(oldCodeChef, newCodeChef)) {
+            log.info("Updating CodeChef username from {} to {}", oldCodeChef, newCodeChef);
+            existingProfile.setCodechefUsername(newCodeChef);
+            clearPlatformStats(existingProfile.getCodechefStats());
+            needsStatsUpdate = true;
+        }
+        
+        String oldLeetCode = existingProfile.getLeetcodeUsername();
+        String newLeetCode = updatedProfile.getLeetcodeUsername();
+        if (!Objects.equals(oldLeetCode, newLeetCode)) {
+            log.info("Updating LeetCode username from {} to {}", oldLeetCode, newLeetCode);
+            existingProfile.setLeetcodeUsername(newLeetCode);
+            clearPlatformStats(existingProfile.getLeetcodeStats());
+            needsStatsUpdate = true;
+        }
+        
+        String oldCodeforces = existingProfile.getCodeforcesUsername();
+        String newCodeforces = updatedProfile.getCodeforcesUsername();
+        if (!Objects.equals(oldCodeforces, newCodeforces)) {
+            log.info("Updating Codeforces username from {} to {}", oldCodeforces, newCodeforces);
+            existingProfile.setCodeforcesUsername(newCodeforces);
+            clearPlatformStats(existingProfile.getCodeforcesStats());
+            needsStatsUpdate = true;
+        }
+        
+        // Update other platform usernames similarly
+        existingProfile.setAtcoderUsername(updatedProfile.getAtcoderUsername());
+        existingProfile.setGeeksforgeeksUsername(updatedProfile.getGeeksforgeeksUsername());
+        existingProfile.setGithubUsername(updatedProfile.getGithubUsername());
+        
+        existingProfile.setLastUpdated(LocalDateTime.now());
+        
+        // First save to ensure usernames are updated
+        log.info("Saving profile updates...");
+        Profile savedProfile = profileRepository.save(existingProfile);
+        log.info("Profile saved with CodeChef username: {}", savedProfile.getCodechefUsername());
+        
+        // If any platform username changed, update stats
+        if (needsStatsUpdate) {
+            log.info("Updating platform stats...");
+            try {
+                return updateProfile(userId);
+            } catch (Exception e) {
+                log.error("Error updating platform stats: {}", e.getMessage());
+                // Return saved profile even if stats update fails
+                return savedProfile;
+            }
+        }
+        
+        return savedProfile;
+    }
+
+    private void clearPlatformStats(PlatformStats stats) {
+        if (stats != null) {
+            log.info("Clearing platform stats");
+            stats.setTotalQuestions(0);
+            stats.setTotalActiveDays(0);
+            stats.setTotalContests(0);
+            stats.setRating(0);
+            stats.setContestRanking(0);
+            stats.setDifficultyWiseSolved(new HashMap<String, Integer>());
+            stats.setTopicWiseSolved(new HashMap<String, Integer>());
+            stats.setSubmissionCalendar("");
+            stats.setAwards("");
+        }
+    }
+
+    @Override
+    @Transactional
+    public Profile updateCodeChefProfile(String userId, String username) {
+        log.info("Updating CodeChef profile for user: {} with new username: {}", userId, username);
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("CodeChef username cannot be empty");
+        }
+
+        Profile profile = getProfile(userId);
+        
+        // Clear old stats
+        clearPlatformStats(profile.getCodechefStats());
+        
+        // Set new username and save
+        profile.setCodechefUsername(username);
+        profile = profileRepository.save(profile);
+        
+        try {
+            // Fetch and update stats for new username
+            PlatformStatsDTO stats = codeChefClient.getUserProfile(username);
+            updatePlatformStats(profile.getCodechefStats(), stats);
+            profile.setLastUpdated(LocalDateTime.now());
+            return profileRepository.save(profile);
+        } catch (Exception e) {
+            log.error("Failed to update CodeChef profile for user: {} with error: {}", userId, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "Failed to update CodeChef profile: " + e.getMessage());
+        }
     }
 
     @Override
@@ -95,33 +227,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public Map<String, Object> getLeetCodeProfile(String username) {
-        log.info("Fetching LeetCode profile for username: {}", username);
-        try {
-            JSONObject response = leetCodeClient.getUserProfile(username);
-            
-            if (response.has("errors")) {
-                log.error("LeetCode API returned errors: {}", response.getJSONArray("errors"));
-                throw new RuntimeException("LeetCode API error: " + response.getJSONArray("errors").toString());
-            }
-            
-            if (!response.has("data") || !response.getJSONObject("data").has("matchedUser")) {
-                log.error("Invalid response format from LeetCode API: {}", response);
-                throw new RuntimeException("Invalid response from LeetCode API");
-            }
-            
-            return response.toMap();
-        } catch (Exception e) {
-            log.error("Error fetching LeetCode profile for username: {}", username, e);
-            throw new RuntimeException("Failed to fetch LeetCode profile: " + e.getMessage(), e);
-        }
-    }
-
-    @Override
     public Profile updateLeetCodeProfile(String userId, String username) {
         log.info("Updating LeetCode profile for user: {}", userId);
         if (username == null || username.trim().isEmpty()) {
-            log.error("Invalid LeetCode username provided");
             throw new IllegalArgumentException("LeetCode username cannot be empty");
         }
 
@@ -129,101 +237,14 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setLeetcodeUsername(username);
         
         try {
-            updateLeetCodeStats(profile);
+            PlatformStatsDTO stats = leetCodeClient.getUserProfile(username);
+            updatePlatformStats(profile.getLeetcodeStats(), stats);
+            profile.setLastUpdated(LocalDateTime.now());
             return profileRepository.save(profile);
         } catch (Exception e) {
             log.error("Failed to update LeetCode profile for user: {}", userId, e);
-            throw new RuntimeException("Failed to update LeetCode profile: " + e.getMessage(), e);
-        }
-    }
-
-    private void updateLeetCodeStats(Profile profile) {
-        if (profile.getLeetcodeUsername() == null) {
-            log.warn("LeetCode username not set for user: {}", profile.getUserId());
-            return;
-        }
-
-        try {
-            JSONObject response = leetCodeClient.getUserProfile(profile.getLeetcodeUsername());
-            
-            if (response.has("errors")) {
-                throw new RuntimeException("LeetCode API error: " + response.getJSONArray("errors").toString());
-            }
-            
-            JSONObject matchedUser = response.getJSONObject("data").getJSONObject("matchedUser");
-            JSONObject submitStats = matchedUser.getJSONObject("submitStats");
-            JSONArray acSubmissionNum = submitStats.getJSONArray("acSubmissionNum");
-            
-            int totalSolved = 0;
-            int easySolved = 0;
-            int mediumSolved = 0;
-            int hardSolved = 0;
-            
-            for (int i = 0; i < acSubmissionNum.length(); i++) {
-                JSONObject submission = acSubmissionNum.getJSONObject(i);
-                String difficulty = submission.getString("difficulty");
-                int count = submission.getInt("count");
-                
-                switch (difficulty) {
-                    case "All":
-                        totalSolved = count;
-                        break;
-                    case "Easy":
-                        easySolved = count;
-                        break;
-                    case "Medium":
-                        mediumSolved = count;
-                        break;
-                    case "Hard":
-                        hardSolved = count;
-                        break;
-                }
-            }
-            
-            profile.setLeetcodeTotalSolved(totalSolved);
-            profile.setLeetcodeEasySolved(easySolved);
-            profile.setLeetcodeMediumSolved(mediumSolved);
-            profile.setLeetcodeHardSolved(hardSolved);
-            
-            // Update profile ranking if available
-            if (matchedUser.has("profile")) {
-                JSONObject profileData = matchedUser.getJSONObject("profile");
-                if (profileData.has("ranking")) {
-                    profile.setLeetcodeRating(profileData.getInt("ranking"));
-                }
-            }
-            
-            profile.setLeetcodeTotalSolved(profile.getLeetcodeTotalSolved());
-            
-        } catch (Exception e) {
-            log.error("Error updating LeetCode stats for user: {}", profile.getUserId(), e);
-            throw new RuntimeException("Failed to update LeetCode stats: " + e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public Map<String, Object> getCodeforcesProfile(String handle) {
-        log.info("Fetching CodeForces profile for handle: {}", handle);
-        try {
-            JSONObject userInfo = new JSONObject(codeforcesClient.getUserInfo(handle));
-            JSONObject ratingInfo = new JSONObject(codeforcesClient.getUserRating(handle));
-            
-            if (userInfo.has("status") && !userInfo.getString("status").equals("OK")) {
-                throw new RuntimeException("CodeForces API error: " + userInfo.getString("comment"));
-            }
-            
-            JSONObject result = userInfo.getJSONArray("result").getJSONObject(0);
-            return Map.of(
-                "handle", result.getString("handle"),
-                "rating", result.optInt("rating", 0),
-                "rank", result.optString("rank", "unrated"),
-                "maxRating", result.optInt("maxRating", 0),
-                "contribution", result.optInt("contribution", 0),
-                "contestCount", ratingInfo.getJSONArray("result").length()
-            );
-        } catch (Exception e) {
-            log.error("Error fetching CodeForces profile: {}", e.getMessage());
-            throw new RuntimeException("Failed to fetch CodeForces profile: " + e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "Failed to update LeetCode profile: " + e.getMessage());
         }
     }
 
@@ -238,27 +259,221 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setCodeforcesUsername(handle);
         
         try {
-            Map<String, Object> cfProfile = getCodeforcesProfile(handle);
-            profile.setCodeforcesRating((Integer) cfProfile.get("rating"));
-            profile.setCodeforcesRank((String) cfProfile.get("rank"));
-            profile.setCodeforcesContestCount((Integer) cfProfile.get("contestCount"));
-            
-            // Update last updated timestamp
+            PlatformStatsDTO stats = codeforcesClient.getUserProfile(handle);
+            updatePlatformStats(profile.getCodeforcesStats(), stats);
             profile.setLastUpdated(LocalDateTime.now());
-            
             return profileRepository.save(profile);
         } catch (Exception e) {
             log.error("Failed to update CodeForces profile for user: {}", userId, e);
-            throw new RuntimeException("Failed to update CodeForces profile: " + e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "Failed to update CodeForces profile: " + e.getMessage());
         }
     }
 
     @Override
-    public JSONObject getCodeChefProfile(String userId) {
-        Profile profile = getProfile(userId);
-        if (profile.getCodechefUsername() == null || profile.getCodechefUsername().isEmpty()) {
-            throw new RuntimeException("CodeChef username not set for user");
+    public Map<String, Object> getAtCoderStats(String userId) {
+        try {
+            Profile profile = getProfile(userId);
+            if (profile.getAtcoderUsername() == null || profile.getAtcoderUsername().trim().isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "AtCoder username not set");
+            }
+            PlatformStatsDTO stats = atcoderClient.getUserProfile(profile.getAtcoderUsername());
+            return Map.of(
+                "rating", stats.getRating(),
+                "totalQuestions", stats.getTotalQuestions(),
+                "totalContests", stats.getTotalContests(),
+                "contestRanking", stats.getContestRanking()
+            );
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error getting AtCoder stats for user {}: {}", userId, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "Failed to retrieve AtCoder stats. Please try again later.");
         }
-        return codeChefClient.getUserProfile(profile.getCodechefUsername());
+    }
+
+    @Override
+    public Profile updateAtCoderProfile(String userId, String username) {
+        try {
+            Profile profile = getProfile(userId);
+            atcoderClient.getUserProfile(username); // Validate username exists
+            profile.setAtcoderUsername(username);
+            return profileRepository.save(profile);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error updating AtCoder username for user {}: {}", userId, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "Failed to update AtCoder username. Please try again later.");
+        }
+    }
+
+    @Override
+    public Map<String, Object> getGeeksForGeeksStats(String userId) {
+        try {
+            Profile profile = getProfile(userId);
+            if (profile.getGeeksforgeeksUsername() == null || profile.getGeeksforgeeksUsername().trim().isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "GeeksForGeeks username not set");
+            }
+            
+            PlatformStatsDTO stats = geeksForGeeksClient.getUserProfile(profile.getGeeksforgeeksUsername());
+            
+            return Map.of(
+                "totalQuestions", stats.getTotalQuestions(),
+                "rating", stats.getRating(),
+                "contestRanking", stats.getContestRanking(),
+                "totalActiveDays", stats.getTotalActiveDays(),
+                "difficultyWiseSolved", stats.getDifficultyWiseSolved(),
+                "topicWiseSolved", stats.getTopicWiseSolved(),
+                "submissionCalendar", stats.getSubmissionCalendar(),
+                "awards", stats.getAwards()
+            );
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error getting GeeksForGeeks stats for user {}: {}", userId, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "Failed to retrieve GeeksForGeeks stats. Please try again later.");
+        }
+    }
+
+    @Override
+    public Profile updateGeeksForGeeksProfile(String userId, String username) {
+        log.info("Updating GeeksForGeeks profile for user: {}", userId);
+        
+        if (username == null || username.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "GeeksForGeeks username cannot be empty");
+        }
+
+        Profile profile = getProfile(userId);
+        if (profile == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found");
+        }
+
+        profile.setGeeksforgeeksUsername(username);
+        
+        try {
+            PlatformStatsDTO stats = geeksForGeeksClient.getUserProfile(username);
+            updatePlatformStats(profile.getGeeksforgeeksStats(), stats);
+            profile.setLastUpdated(LocalDateTime.now());
+            return profileRepository.save(profile);
+        } catch (Exception e) {
+            log.error("Error updating GeeksForGeeks profile for user: {}", userId, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update GeeksForGeeks profile");
+        }
+    }
+
+    @Override
+    public Map<String, Object> getGitHubStats(String userId) {
+        log.info("Fetching GitHub stats for user: {}", userId);
+        
+        try {
+            Profile profile = getProfile(userId);
+            if (profile == null) {
+                log.error("Profile not found for user ID: {}", userId);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found");
+            }
+            
+            String githubUsername = profile.getGithubUsername();
+            if (githubUsername == null || githubUsername.trim().isEmpty()) {
+                log.error("GitHub username not set for user ID: {}", userId);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                    "GitHub username not set. Please set your GitHub username first.");
+            }
+
+            try {
+                log.info("Fetching GitHub stats for username: {}", githubUsername);
+                GitHubStatsDTO stats = gitHubClient.getUserProfile(githubUsername);
+                
+                if (stats == null) {
+                    log.error("Received null stats from GitHub client for username: {}", githubUsername);
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
+                        "Failed to fetch GitHub stats: Received null response");
+                }
+                
+                Map<String, Object> response = new HashMap<>();
+                
+                // Basic stats
+                response.put("repositories", stats.getPublicRepos());
+                response.put("stars", stats.getTotalStars());
+                response.put("followers", stats.getFollowers());
+                response.put("following", stats.getFollowing());
+                
+                // Contribution stats
+                response.put("totalContributions", stats.getTotalContributions());
+                response.put("totalActiveDays", stats.getTotalActiveDays());
+                response.put("currentStreak", stats.getCurrentStreak());
+                response.put("maxStreak", stats.getMaxStreak());
+                
+                // Activity stats
+                response.put("prs", stats.getPrs());
+                response.put("issues", stats.getIssues());
+                response.put("commits", stats.getCommits());
+                
+                // Languages and contribution calendar
+                response.put("languages", stats.getLanguages());
+                response.put("contributionCalendar", stats.getContributionCalendar());
+                
+                log.info("Successfully fetched GitHub stats for username: {}", githubUsername);
+                return response;
+            } catch (Exception e) {
+                log.error("Error fetching GitHub stats from client for username {}: {}", 
+                    githubUsername, e.getMessage(), e);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to fetch GitHub stats: " + e.getMessage());
+            }
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error in getGitHubStats for user {}: {}", 
+                userId, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Unexpected error while fetching GitHub stats: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Profile updateGitHubProfile(String userId, String username) {
+        log.info("Updating GitHub profile for user: {}", userId);
+        
+        if (username == null || username.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "GitHub username cannot be empty");
+        }
+
+        Profile profile = getProfile(userId);
+        if (profile == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found");
+        }
+
+        profile.setGithubUsername(username);
+        
+        try {
+            GitHubStatsDTO stats = gitHubClient.getUserProfile(username);
+            // Update GitHub stats directly on profile
+            profile.setGithubRepos(stats.getPublicRepos());
+            profile.setGithubStars(stats.getTotalStars());
+            profile.setGithubFollowers(stats.getFollowers());
+            profile.setGithubFollowing(stats.getFollowing());
+            profile.setLastUpdated(LocalDateTime.now());
+            return profileRepository.save(profile);
+        } catch (Exception e) {
+            log.error("Error updating GitHub profile for user: {}", userId, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update GitHub profile");
+        }
+    }
+
+    private void updatePlatformStats(PlatformStats target, PlatformStatsDTO source) {
+        if (source == null) return;
+        
+        target.setTotalQuestions(source.getTotalQuestions());
+        target.setTotalActiveDays(source.getTotalActiveDays());
+        target.setTotalContests(source.getTotalContests());
+        target.setRating(source.getRating());
+        target.setContestRanking(source.getContestRanking());
+        target.setDifficultyWiseSolved(source.getDifficultyWiseSolved());
+        target.setTopicWiseSolved(source.getTopicWiseSolved());
+        target.setSubmissionCalendar(source.getSubmissionCalendar());
+        target.setAwards(source.getAwards());
     }
 } 
