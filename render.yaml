@@ -4,7 +4,6 @@ services:
     name: codefolio-config-server
     env: docker
     rootDir: configServer
-    region: ohio
     plan: free
     buildCommand: docker build -t codefolio-config-server .
     envVars:
@@ -18,7 +17,6 @@ services:
     name: codefolio-registry
     env: docker
     rootDir: registryServer
-    region: ohio
     plan: free
     buildCommand: docker build -t codefolio-registry .
     envVars:
@@ -32,7 +30,6 @@ services:
     name: codefolio-gateway
     env: docker
     rootDir: apiGateway
-    region: ohio
     plan: free
     buildCommand: docker build -t codefolio-gateway .
     envVars:
@@ -50,7 +47,6 @@ services:
     name: codefolio-auth
     env: docker
     rootDir: authService
-    region: ohio
     plan: free
     buildCommand: docker build -t codefolio-auth .
     envVars:
@@ -68,7 +64,6 @@ services:
     name: codefolio-profile
     env: docker
     rootDir: profileService
-    region: ohio
     plan: free
     buildCommand: docker build -t codefolio-profile .
     envVars:
@@ -94,7 +89,6 @@ services:
     name: codefolio-contest
     env: docker
     rootDir: contestService
-    region: ohio
     plan: free
     buildCommand: docker build -t codefolio-contest .
     envVars:
