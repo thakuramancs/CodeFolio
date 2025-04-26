@@ -5,7 +5,6 @@ services:
     env: docker
     dockerfilePath: ./registryServer/Dockerfile
     buildCommand: cd registryServer && ./mvnw clean package -DskipTests
-    startCommand: java -jar registryServer/target/*.jar
     plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -19,7 +18,6 @@ services:
     env: docker
     dockerfilePath: ./configServer/Dockerfile
     buildCommand: cd configServer && ./mvnw clean package -DskipTests
-    startCommand: java -jar configServer/target/*.jar
     plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -39,7 +37,6 @@ services:
     env: docker
     dockerfilePath: ./apiGateway/Dockerfile
     buildCommand: cd apiGateway && ./mvnw clean package -DskipTests
-    startCommand: java -jar apiGateway/target/*.jar
     plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -57,7 +54,6 @@ services:
     env: docker
     dockerfilePath: ./authService/Dockerfile
     buildCommand: cd authService && ./mvnw clean package -DskipTests
-    startCommand: java -jar authService/target/*.jar
     plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -81,7 +77,6 @@ services:
     env: docker
     dockerfilePath: ./profileService/Dockerfile
     buildCommand: cd profileService && ./mvnw clean package -DskipTests
-    startCommand: java -jar profileService/target/*.jar
     plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -107,7 +102,6 @@ services:
     env: docker
     dockerfilePath: ./contestService/Dockerfile
     buildCommand: cd contestService && ./mvnw clean package -DskipTests
-    startCommand: java -jar contestService/target/*.jar
     plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -125,15 +119,12 @@ services:
       - key: PORT
         value: 8082
 
-  # Database
-  - type: pserv
+  # Database (using Render's managed MySQL)
+  - type: web
     name: codefolio-db
-    plan: free
     env: docker
-    disk:
-      name: data
-      mountPath: /var/lib/mysql
-      sizeGB: 1
+    plan: free
+    image: mysql:8.0
     envVars:
       - key: MYSQL_ROOT_PASSWORD
         sync: false
