@@ -81,17 +81,17 @@ public class GeeksForGeeksClient {
                 difficultyWise.put("hard", hard.getInt("count"));
                 difficultyWise.put("basic", basic.getInt("count"));
                 
-                stats.setDifficultyWiseSolved(difficultyWise);
+            stats.setDifficultyWiseSolved(difficultyWise);
 
                 // Create topic-wise solved map (using problem categories)
-                Map<String, Integer> topicWise = new HashMap<>();
+            Map<String, Integer> topicWise = new HashMap<>();
                 // Add counts from each difficulty level
                 addQuestionsToTopicMap(topicWise, easy.getJSONArray("questions"), "easy");
                 addQuestionsToTopicMap(topicWise, medium.getJSONArray("questions"), "medium");
                 addQuestionsToTopicMap(topicWise, hard.getJSONArray("questions"), "hard");
                 addQuestionsToTopicMap(topicWise, basic.getJSONArray("questions"), "basic");
                 
-                stats.setTopicWiseSolved(topicWise);
+            stats.setTopicWiseSolved(topicWise);
 
                 // Set submission calendar (empty as it's not provided by the API)
                 stats.setSubmissionCalendar("{}");

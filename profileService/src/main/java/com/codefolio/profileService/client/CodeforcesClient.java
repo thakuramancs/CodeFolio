@@ -45,8 +45,8 @@ public class CodeforcesClient {
             JSONObject user = userInfo.getJSONArray("result").getJSONObject(0);
             
             // Set basic info
-            stats.setRating(user.optInt("rating", 0));
-            stats.setContestRanking(user.optInt("maxRank", 0));
+            stats.setRating(user.optInt("maxRating", 0));
+            stats.setContestRanking(user.optInt("rating", 0));
             
             // Process submissions
             if ("OK".equals(userStatus.getString("status"))) {
@@ -93,20 +93,20 @@ public class CodeforcesClient {
 
             // Create awards array
             JSONArray awards = new JSONArray();
-            if (user.has("rank")) {
-                JSONObject rankAward = new JSONObject();
-                rankAward.put("name", "Current Rank");
-                rankAward.put("value", user.getString("rank"));
-                awards.put(rankAward);
+            if (user.has("rating")) {
+                JSONObject ratingAward = new JSONObject();
+                ratingAward.put("name", "Current Rating");
+                ratingAward.put("value", user.getInt("rating"));
+                awards.put(ratingAward);
             }
-            if (user.has("maxRank")) {
-                JSONObject maxRankAward = new JSONObject();
-                maxRankAward.put("name", "Max Rank");
-                maxRankAward.put("value", user.getString("maxRank"));
-                awards.put(maxRankAward);
+            if (user.has("maxRating")) {
+                JSONObject maxRatingAward = new JSONObject();
+                maxRatingAward.put("name", "Max Rating");
+                maxRatingAward.put("value", user.getInt("maxRating"));
+                awards.put(maxRatingAward);
             }
             stats.setAwards(awards.toString());
-
+            
             return stats;
 
         } catch (Exception e) {

@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: PROFILE-SERVICE
+  datasource:
+    url: jdbc:mysql://localhost:3306/codefolio_profile_dev
+    username: root
+    password: Root@123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8081
+
+# Eureka Configuration
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    instance-id: ${spring.application.name}:${random.uuid}
+    prefer-ip-address: true
+
+# GitHub configuration
+github:
+  token: ${GITHUB_TOKEN:dummy-token-for-dev}
+
+# Logging Configuration
+logging:
+  level:
+    com.codefolio.profileService: DEBUG 

@@ -1,10 +1,16 @@
 package com.codefolio.profileService.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.util.Map;
 import java.util.List;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GitHubStatsDTO {
     private int publicRepos;
     private int followers;
@@ -21,6 +27,9 @@ public class GitHubStatsDTO {
     private List<ContributionDay> contributionCalendar;
 
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ContributionDay {
         private String date;
         private int count;

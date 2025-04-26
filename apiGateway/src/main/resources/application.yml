@@ -14,7 +14,7 @@ spring:
             - Path=/api/profiles/github/**
           filters:
             - StripPrefix=1
-        
+
         - id: profile-service
           uri: lb://profile-service
           predicates:

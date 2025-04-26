@@ -378,11 +378,11 @@ public class ProfileServiceImpl implements ProfileService {
             String githubUsername = profile.getGithubUsername();
             if (githubUsername == null || githubUsername.trim().isEmpty()) {
                 log.error("GitHub username not set for user ID: {}", userId);
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, 
-                    "GitHub username not set. Please set your GitHub username first.");
-            }
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                "GitHub username not set. Please set your GitHub username first.");
+        }
 
-            try {
+        try {
                 log.info("Fetching GitHub stats for username: {}", githubUsername);
                 GitHubStatsDTO stats = gitHubClient.getUserProfile(githubUsername);
                 
@@ -428,7 +428,7 @@ public class ProfileServiceImpl implements ProfileService {
         } catch (Exception e) {
             log.error("Unexpected error in getGitHubStats for user {}: {}", 
                 userId, e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
                 "Unexpected error while fetching GitHub stats: " + e.getMessage());
         }
     }

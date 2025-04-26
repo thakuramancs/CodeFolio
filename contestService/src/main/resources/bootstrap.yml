@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: CONTEST-SERVICE
+  cloud:
+    config:
+      uri: http://localhost:8888
+      fail-fast: true 

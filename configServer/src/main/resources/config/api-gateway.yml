@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      routes:
+        - id: profile-service
+          uri: lb://PROFILE-SERVICE
+          predicates:
+            - Path=/api/profiles/**
+          filters:
+            - RewritePath=/api/profiles/(?<segment>.*), /profiles/${segment}
+            - AddResponseHeader=Access-Control-Allow-Origin, ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+            - AddResponseHeader=Access-Control-Allow-Credentials, true
+
+        - id: contest-service
+          uri: lb://CONTEST-SERVICE
+          predicates:
+            - Path=/api/contests/**
+          filters:
+            - RewritePath=/api/contests/(?<segment>.*), /contests/${segment}
+
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/auth/**
+
+server:
+  port: 8080
+
+# Eureka Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true 

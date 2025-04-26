@@ -87,7 +87,7 @@ public class GitHubClient {
                 List<GHRepository> repos = user.listRepositories().toList();
                 for (GHRepository repo : repos) {
                     totalStars += repo.getStargazersCount();
-                    
+                
                     // Aggregate language statistics
                     try {
                         Map<String, Long> repoLanguages = repo.listLanguages();

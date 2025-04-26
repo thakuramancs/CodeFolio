@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: AUTH-SERVICE
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-l4og12lsekqwkqbp.us.auth0.com/oauth2/default
+          jwk-set-uri: https://dev-l4og12lsekqwkqbp.us.auth0.com/oauth2/default/v1/keys
+  webmvc:
+    cors:
+      allowed-origins: http://localhost:3000
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+      allow-credentials: true
+
+server:
+  port: 8083
+
+# Eureka Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+# Logging Configuration
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always 

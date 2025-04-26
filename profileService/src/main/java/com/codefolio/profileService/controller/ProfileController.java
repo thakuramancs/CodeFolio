@@ -406,8 +406,8 @@ public class ProfileController {
             log.info("Found GitHub username: {} for user ID: {}", githubUsername, decodedUserId);
 
             try {
-                Map<String, Object> githubStats = profileService.getGitHubStats(decodedUserId);
-                return ResponseEntity.ok(githubStats);
+            Map<String, Object> githubStats = profileService.getGitHubStats(decodedUserId);
+            return ResponseEntity.ok(githubStats);
             } catch (Exception e) {
                 log.error("Error fetching GitHub stats for username {}: {}", githubUsername, e.getMessage(), e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

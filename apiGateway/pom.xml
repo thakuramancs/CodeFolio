@@ -12,7 +12,7 @@
 	<artifactId>apiGateway</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>apiGateway</name>
-	<description>api gateway</description>
+	<description>API Gateway for CodeFolio</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -39,7 +39,10 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
