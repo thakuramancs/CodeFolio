@@ -1,9 +1,14 @@
-FROM eclipse-temurin:17-jdk-alpine
+FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline
-COPY src ./src
-RUN ./mvnw package -DskipTests
+# Copy the POM file first
+COPY ./pom.xml ./
+# Copy the src directory
+COPY ./src ./src
+# Build the application
+RUN mvn clean package -DskipTests
+
+FROM openjdk:17-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "target/*.jar"] 
+ENTRYPOINT ["java", "-jar", "app.jar"] 
