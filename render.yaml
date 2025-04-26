@@ -6,8 +6,7 @@ services:
     rootDir: configServer
     region: ohio
     plan: free
-    buildCommand: "./mvnw package -DskipTests"
-    startCommand: "java -jar target/*.jar"
+    buildCommand: docker build -t codefolio-config-server .
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -21,8 +20,7 @@ services:
     rootDir: registryServer
     region: ohio
     plan: free
-    buildCommand: "./mvnw package -DskipTests"
-    startCommand: "java -jar target/*.jar"
+    buildCommand: docker build -t codefolio-registry .
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -36,8 +34,7 @@ services:
     rootDir: apiGateway
     region: ohio
     plan: free
-    buildCommand: "./mvnw package -DskipTests"
-    startCommand: "java -jar target/*.jar"
+    buildCommand: docker build -t codefolio-gateway .
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -55,8 +52,7 @@ services:
     rootDir: authService
     region: ohio
     plan: free
-    buildCommand: "./mvnw package -DskipTests"
-    startCommand: "java -jar target/*.jar"
+    buildCommand: docker build -t codefolio-auth .
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -74,8 +70,7 @@ services:
     rootDir: profileService
     region: ohio
     plan: free
-    buildCommand: "./mvnw package -DskipTests"
-    startCommand: "java -jar target/*.jar"
+    buildCommand: docker build -t codefolio-profile .
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -101,8 +96,7 @@ services:
     rootDir: contestService
     region: ohio
     plan: free
-    buildCommand: "./mvnw package -DskipTests"
-    startCommand: "java -jar target/*.jar"
+    buildCommand: docker build -t codefolio-contest .
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
