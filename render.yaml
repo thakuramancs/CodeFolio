@@ -1,0 +1,114 @@
+services:
+  # Config Server
+  - type: web
+    name: codefolio-config-server
+    env: docker
+    rootDir: configServer
+    region: ohio
+    plan: free
+    buildCommand: "./mvnw package -DskipTests"
+    startCommand: "java -jar target/*.jar"
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8888
+
+  # Registry Server
+  - type: web
+    name: codefolio-registry
+    env: docker
+    rootDir: registryServer
+    region: ohio
+    plan: free
+    buildCommand: "./mvnw package -DskipTests"
+    startCommand: "java -jar target/*.jar"
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8761
+
+  # API Gateway
+  - type: web
+    name: codefolio-gateway
+    env: docker
+    rootDir: apiGateway
+    region: ohio
+    plan: free
+    buildCommand: "./mvnw package -DskipTests"
+    startCommand: "java -jar target/*.jar"
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8080
+      - key: SPRING_CLOUD_CONFIG_URI
+        value: https://codefolio-config-server.onrender.com
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: https://codefolio-registry.onrender.com/eureka/
+
+  # Auth Service
+  - type: web
+    name: codefolio-auth
+    env: docker
+    rootDir: authService
+    region: ohio
+    plan: free
+    buildCommand: "./mvnw package -DskipTests"
+    startCommand: "java -jar target/*.jar"
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8083
+      - key: SPRING_CLOUD_CONFIG_URI
+        value: https://codefolio-config-server.onrender.com
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: https://codefolio-registry.onrender.com/eureka/
+
+  # Profile Service
+  - type: web
+    name: codefolio-profile
+    env: docker
+    rootDir: profileService
+    region: ohio
+    plan: free
+    buildCommand: "./mvnw package -DskipTests"
+    startCommand: "java -jar target/*.jar"
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8081
+      - key: SPRING_CLOUD_CONFIG_URI
+        value: https://codefolio-config-server.onrender.com
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: https://codefolio-registry.onrender.com/eureka/
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://root:QVzZzIIidBRQBBcAnpDvEeAESTFCvBtF@caboose.proxy.rlwy.net:42893/railway
+      - key: SPRING_DATASOURCE_USERNAME
+        value: root
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: QVzZzIIidBRQBBcAnpDvEeAESTFCvBtF
+      - key: GITHUB_TOKEN
+        sync: false
+
+  # Contest Service
+  - type: web
+    name: codefolio-contest
+    env: docker
+    rootDir: contestService
+    region: ohio
+    plan: free
+    buildCommand: "./mvnw package -DskipTests"
+    startCommand: "java -jar target/*.jar"
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8082
+      - key: SPRING_CLOUD_CONFIG_URI
+        value: https://codefolio-config-server.onrender.com
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: https://codefolio-registry.onrender.com/eureka/ 
