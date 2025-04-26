@@ -17,99 +17,78 @@ codefolio/
 
 ## Prerequisites
 
-- Java 17
-- Node.js 16+
-- Maven
-- MySQL
+- Docker and Docker Compose
+- GitHub Account (for GitHub API token)
+- Auth0 Account (for authentication)
 
-## Local Development Setup
+## Quick Start with Docker
 
-1. Set up environment variables:
+1. Clone the repository:
    ```bash
-   # GitHub Personal Access Token for Profile Service
-   export GITHUB_TOKEN=your_github_token
-   
-   # Database Configuration
-   export DB_USERNAME=your_db_username
-   export DB_PASSWORD=your_db_password
-   
-   # Auth0 Configuration
-   export AUTH0_DOMAIN=your_auth0_domain
-   export AUTH0_CLIENT_ID=your_auth0_client_id
-   export AUTH0_AUDIENCE=your_auth0_audience
+   git clone https://github.com/your-username/codefolio.git
+   cd codefolio
    ```
 
-2. Create local configuration files:
+2. Create environment file:
    ```bash
-   # For Profile Service
-   cp profileService/run.sh.template profileService/run.sh
-   # Edit run.sh with your local configuration
+   cp .env.template .env
+   # Edit .env with your configurations
    ```
 
-## Quick Start
-
-1. Start Config Server:
+3. Start the application:
    ```bash
-   cd configServer
-   ./mvnw spring-boot:run
+   docker-compose up -d
    ```
 
-2. Start Registry Server:
-   ```bash
-   cd registryServer
-   ./mvnw spring-boot:run
-   ```
+4. Access the application:
+   - Frontend: http://localhost:3000
+   - API Gateway: http://localhost:8080
+   - Eureka Dashboard: http://localhost:8761
+   - Config Server: http://localhost:8888
 
-3. Start Other Services:
-   ```bash
-   # Start API Gateway
-   cd apiGateway
-   ./mvnw spring-boot:run
+## Free Cloud Deployment
 
-   # Start Auth Service
-   cd authService
-   ./mvnw spring-boot:run
+1. Fork this repository
 
-   # Start Profile Service
-   cd profileService
-   ./run.sh  # Uses local configuration
+2. Deploy Database:
+   - Create a free MySQL database on PlanetScale or Railway
+   - Update the database connection details in your environment variables
 
-   # Start Contest Service
-   cd contestService
-   ./mvnw spring-boot:run
-   ```
+3. Deploy Backend Services:
+   - Sign up for Oracle Cloud Free Tier
+   - Create a VM instance (Always Free)
+   - SSH into your VM and clone your repository
+   - Install Docker and Docker Compose
+   - Set up environment variables
+   - Run `docker-compose up -d`
 
-4. Start Frontend:
-   ```bash
-   cd frontend
-   npm install
-   npm start
-   ```
+4. Deploy Frontend:
+   - Create a Vercel account
+   - Import your forked repository
+   - Configure environment variables in Vercel dashboard
+   - Deploy
+
+5. Update configurations:
+   - Update API Gateway CORS settings for your Vercel domain
+   - Update Auth0 allowed callbacks and origins
 
 ## Environment Variables
 
-Create a `.env` file in the frontend directory with:
-
+Required environment variables:
 ```env
-REACT_APP_API_URL=http://localhost:8080
-REACT_APP_AUTH0_DOMAIN=your-auth0-domain
-REACT_APP_AUTH0_CLIENT_ID=your-auth0-client-id
-REACT_APP_AUTH0_AUDIENCE=your-auth0-audience
+# Database Configuration
+DB_USERNAME=codefolio_user
+DB_PASSWORD=your_db_password
+DB_ROOT_PASSWORD=your_root_password
+
+# GitHub Configuration
+GITHUB_TOKEN=your_github_token
+
+# Auth0 Configuration
+AUTH0_DOMAIN=your_auth0_domain
+AUTH0_CLIENT_ID=your_auth0_client_id
+AUTH0_AUDIENCE=your_auth0_audience
 ```
-
-## Deployment
-
-The project is deployed using the following setup:
-- Backend Services: GitHub Actions + Cloud Platform
-- Frontend: Vercel
-- Configuration: GitHub Repository
-
-### Required Secrets for Deployment
-- `GITHUB_TOKEN`: GitHub Personal Access Token
-- `VERCEL_TOKEN`: Vercel deployment token
-- `CLOUD_PLATFORM_TOKEN`: Your cloud platform credentials
-- `DB_USERNAME`: Database username
-- `DB_PASSWORD`: Database password
 
 ## Contributing
 
@@ -117,4 +96,8 @@ The project is deployed using the following setup:
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request 
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details. 

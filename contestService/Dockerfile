@@ -1,5 +1,9 @@
 FROM eclipse-temurin:17-jdk-alpine
-VOLUME /tmp
-COPY target/*.jar app.jar
+WORKDIR /app
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+RUN ./mvnw dependency:go-offline
+COPY src ./src
+RUN ./mvnw package -DskipTests
 EXPOSE 8082
-ENTRYPOINT ["java","-jar","/app.jar"] 
+ENTRYPOINT ["java", "-jar", "target/*.jar"] 

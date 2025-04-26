@@ -1,102 +1,92 @@
 version: '3.8'
 
 services:
-  # MySQL Database
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: codefolio
+  # Config Server
+  config-server:
+    build: ./configServer
     ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
+      - "${PORT:-8888}:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    networks:
+      - codefolio-network
 
   # Registry Server (Eureka)
   registry-server:
-    build: 
-      context: ./registryServer
+    build: ./registryServer
     ports:
       - "8761:8761"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Config Server
-  config-server:
-    build: 
-      context: ./configServer
-    ports:
-      - "8888:8888"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=${CONFIG_REPO_URL}
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME=${CONFIG_SERVER_USERNAME}
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD=${CONFIG_SERVER_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=prod
     depends_on:
-      registry-server:
-        condition: service_healthy
+      - config-server
+    networks:
+      - codefolio-network
 
   # API Gateway
   api-gateway:
-    build: 
-      context: ./apiGateway
+    build: ./apiGateway
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    depends_on:
-      - config-server
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_CONFIG_URI=https://codefolio-config-server.onrender.com
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=https://codefolio-registry.onrender.com/eureka/
+    networks:
+      - codefolio-network
 
   # Auth Service
   auth-service:
-    build: 
-      context: ./authService
-    ports:
-      - "8083:8083"
+    build: ./authService
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/codefolio
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-    depends_on:
-      - mysql
-      - config-server
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_CONFIG_URI=https://codefolio-config-server.onrender.com
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=https://codefolio-registry.onrender.com/eureka/
+    networks:
+      - codefolio-network
 
   # Profile Service
   profile-service:
-    build: 
-      context: ./profileService
-    ports:
-      - "8081:8081"
+    build: ./profileService
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/codefolio
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_CONFIG_URI=https://codefolio-config-server.onrender.com
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=https://codefolio-registry.onrender.com/eureka/
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://root:QVzZzIIidBRQBBcAnpDvEeAESTFCvBtF@caboose.proxy.rlwy.net:42893/railway
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-      - GH_PAT=${GH_PAT}
-    depends_on:
-      - mysql
-      - config-server
+      - SPRING_DATASOURCE_PASSWORD=QVzZzIIidBRQBBcAnpDvEeAESTFCvBtF
+    networks:
+      - codefolio-network
 
   # Contest Service
   contest-service:
-    build: 
-      context: ./contestService
-    ports:
-      - "8082:8082"
+    build: ./contestService
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/codefolio
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_CONFIG_URI=https://codefolio-config-server.onrender.com
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=https://codefolio-registry.onrender.com/eureka/
+    networks:
+      - codefolio-network
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://api-gateway:8080
+      - REACT_APP_AUTH0_DOMAIN=${AUTH0_DOMAIN}
+      - REACT_APP_AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
+      - REACT_APP_AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
     depends_on:
-      - mysql
-      - config-server
+      - api-gateway
+    networks:
+      - codefolio-network
+
+networks:
+  codefolio-network:
+    driver: bridge
 
 volumes:
-  mysql_data: 
+  mysql-data: 
