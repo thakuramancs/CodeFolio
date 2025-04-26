@@ -1,0 +1,141 @@
+services:
+  # Registry Server
+  - type: web
+    name: codefolio-registry
+    env: docker
+    dockerfilePath: ./registryServer/Dockerfile
+    buildCommand: cd registryServer && ./mvnw clean package -DskipTests
+    startCommand: java -jar registryServer/target/*.jar
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8761
+
+  # Config Server
+  - type: web
+    name: codefolio-config
+    env: docker
+    dockerfilePath: ./configServer/Dockerfile
+    buildCommand: cd configServer && ./mvnw clean package -DskipTests
+    startCommand: java -jar configServer/target/*.jar
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_CLOUD_CONFIG_SERVER_GIT_URI
+        sync: false
+      - key: SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME
+        sync: false
+      - key: SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD
+        sync: false
+      - key: PORT
+        value: 8888
+
+  # API Gateway
+  - type: web
+    name: codefolio-gateway
+    env: docker
+    dockerfilePath: ./apiGateway/Dockerfile
+    buildCommand: cd apiGateway && ./mvnw clean package -DskipTests
+    startCommand: java -jar apiGateway/target/*.jar
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_CONFIG_IMPORT
+        value: configserver:${RENDER_EXTERNAL_URL_codefolio-config}
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: ${RENDER_EXTERNAL_URL_codefolio-registry}/eureka/
+      - key: PORT
+        value: 8080
+
+  # Auth Service
+  - type: web
+    name: codefolio-auth
+    env: docker
+    dockerfilePath: ./authService/Dockerfile
+    buildCommand: cd authService && ./mvnw clean package -DskipTests
+    startCommand: java -jar authService/target/*.jar
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_CONFIG_IMPORT
+        value: configserver:${RENDER_EXTERNAL_URL_codefolio-config}
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: ${RENDER_EXTERNAL_URL_codefolio-registry}/eureka/
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: PORT
+        value: 8083
+
+  # Profile Service
+  - type: web
+    name: codefolio-profile
+    env: docker
+    dockerfilePath: ./profileService/Dockerfile
+    buildCommand: cd profileService && ./mvnw clean package -DskipTests
+    startCommand: java -jar profileService/target/*.jar
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_CONFIG_IMPORT
+        value: configserver:${RENDER_EXTERNAL_URL_codefolio-config}
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: ${RENDER_EXTERNAL_URL_codefolio-registry}/eureka/
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: GH_PAT
+        sync: false
+      - key: PORT
+        value: 8081
+
+  # Contest Service
+  - type: web
+    name: codefolio-contest
+    env: docker
+    dockerfilePath: ./contestService/Dockerfile
+    buildCommand: cd contestService && ./mvnw clean package -DskipTests
+    startCommand: java -jar contestService/target/*.jar
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_CONFIG_IMPORT
+        value: configserver:${RENDER_EXTERNAL_URL_codefolio-config}
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: ${RENDER_EXTERNAL_URL_codefolio-registry}/eureka/
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: PORT
+        value: 8082
+
+  # Database
+  - type: pserv
+    name: codefolio-db
+    plan: free
+    env: docker
+    disk:
+      name: data
+      mountPath: /var/lib/mysql
+      sizeGB: 1
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        sync: false
+      - key: MYSQL_DATABASE
+        value: codefolio 
