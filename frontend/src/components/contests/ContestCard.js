@@ -1,83 +1,58 @@
 import React from 'react';
-import { Card, CardContent, Typography, Button, Chip, Box } from '@mui/material';
-import { AccessTime, Event, Language } from '@mui/icons-material';
+import { Card, CardContent, Typography, Button, Box } from '@mui/material';
+import { format } from 'date-fns';
 
 const ContestCard = ({ contest }) => {
-  const startTime = new Date(contest.startTime);
-  const endTime = new Date(startTime.getTime() + contest.duration);
-  const durationHours = Math.floor(contest.duration / (1000 * 60 * 60));
-  const durationMinutes = Math.floor((contest.duration % (1000 * 60 * 60)) / (1000 * 60));
+  const {
+    title,
+    description,
+    startTime,
+    endTime,
+    platform,
+    url,
+    status
+  } = contest;
 
-  const formatDate = (date) => {
-    return date.toLocaleString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
-  const getPlatformColor = (platform) => {
-    const colors = {
-      'LeetCode': 'warning',
-      'Codeforces': 'error',
-      'CodeChef': 'success',
-      'HackerRank': 'info',
-      'GeeksforGeeks': 'secondary'
-    };
-    return colors[platform] || 'default';
+  const formatDate = (dateString) => {
+    return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
   };
 
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200">
-      <CardContent>
-        <Box className="flex flex-col md:flex-row justify-between items-start gap-4">
-          <Box className="flex-grow">
-            <Typography variant="h6" component="h2" className="mb-2">
-              {contest.name}
-            </Typography>
-            
-            <Box className="flex items-center gap-2 mb-2">
-              <Language fontSize="small" />
-              <Chip 
-                label={contest.platform} 
-                color={getPlatformColor(contest.platform)}
-                size="small"
-              />
-            </Box>
-
-            <Box className="flex items-center gap-2 mb-2">
-              <Event fontSize="small" />
-              <Typography variant="body2" color="text.secondary">
-                Starts: {formatDate(startTime)}
-              </Typography>
-            </Box>
-
-            <Box className="flex items-center gap-2">
-              <AccessTime fontSize="small" />
-              <Typography variant="body2" color="text.secondary">
-                Duration: {durationHours}h {durationMinutes > 0 ? `${durationMinutes}m` : ''}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Box className="w-full md:w-auto">
-            <Button 
-              variant="contained" 
-              color="primary" 
-              href={contest.url} 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full md:w-auto"
-              size="large"
-            >
-              View Contest
-            </Button>
-          </Box>
+    <Card className="contest-card h-full flex flex-col">
+      <CardContent className="flex-grow">
+        <Typography variant="h6" component="h2" gutterBottom>
+          {title}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" paragraph>
+          {description}
+        </Typography>
+        <Box className="mt-4">
+          <Typography variant="body2" color="text.secondary">
+            Start: {formatDate(startTime)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            End: {formatDate(endTime)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" className="mt-2">
+            Platform: {platform}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Status: {status.charAt(0).toUpperCase() + status.slice(1)}
+          </Typography>
         </Box>
       </CardContent>
+      <Box className="p-4 mt-auto">
+        <Button
+          variant="contained"
+          color="primary"
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          fullWidth
+        >
+          View Contest
+        </Button>
+      </Box>
     </Card>
   );
 };
