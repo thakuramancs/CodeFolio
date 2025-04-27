@@ -3,5 +3,5 @@ spring:
     name: REGISTRY-SERVER
   cloud:
     config:
-      uri: http://localhost:8888
+      uri: https://codefolio-config-server.onrender.com
       fail-fast: true 

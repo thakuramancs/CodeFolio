@@ -13,7 +13,7 @@ spring:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:
           '[/**]':
-            allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS:https://code-folio-two.vercel.app}
             allowedMethods:
               - GET
               - POST
@@ -30,7 +30,7 @@ spring:
             - Path=/api/profiles/**
           filters:
             - RewritePath=/api/profiles/(?<segment>.*), /profiles/${segment}
-            - AddResponseHeader=Access-Control-Allow-Origin, ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+            - AddResponseHeader=Access-Control-Allow-Origin, ${CORS_ALLOWED_ORIGINS:https://code-folio-two.vercel.app}
             - AddResponseHeader=Access-Control-Allow-Credentials, true
 
         - id: contest-service
@@ -52,6 +52,6 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: https://codefolio-registry.onrender.com/eureka/
   instance:
     prefer-ip-address: true 

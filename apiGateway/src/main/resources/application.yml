@@ -38,6 +38,6 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: https://codefolio-registry.onrender.com/eureka/
   instance:
     prefer-ip-address: true 
