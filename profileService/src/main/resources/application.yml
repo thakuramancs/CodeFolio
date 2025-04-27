@@ -2,9 +2,9 @@ spring:
   application:
     name: profile-service
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:codefolio_profile}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -20,7 +20,7 @@ logging:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:https://codefolio-registry.onrender.com/eureka/}
   instance:
     instance-id: ${spring.application.name}:${random.uuid}
     prefer-ip-address: true
@@ -36,4 +36,4 @@ management:
 
 # GitHub configuration
 github:
-  token: ${GITHUB_TOKEN:} 
+  token: ${GITHUB_TOKEN} 
