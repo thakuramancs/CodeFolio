@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { API_URLS } from '../../config/api';
+import { API_URLS, fetchApi } from '../../config/api';
 import { ToggleButton, ToggleButtonGroup, Typography, Alert } from '@mui/material';
 import ContestCard from './ContestCard';
 import ContestSkeleton from './ContestSkeleton';
@@ -14,19 +14,18 @@ const Contests = () => {
     const fetchContests = async () => {
       try {
         setLoading(true);
-        const [activeResponse, upcomingResponse] = await Promise.all([
-          fetch(API_URLS.contests.active),
-          fetch(API_URLS.contests.upcoming)
+        const [activeContests, upcomingContests] = await Promise.all([
+          fetchApi(API_URLS.contests.active),
+          fetchApi(API_URLS.contests.upcoming)
         ]);
 
-        if (!activeResponse.ok || !upcomingResponse.ok) {
-          throw new Error('Failed to fetch contests');
-        }
+        console.log('Active contests:', activeContests);
+        console.log('Upcoming contests:', upcomingContests);
 
-        const activeContests = await activeResponse.json();
-        const upcomingContests = await upcomingResponse.json();
-
-        setContests([...activeContests, ...upcomingContests]);
+        setContests([
+          ...(Array.isArray(activeContests) ? activeContests : []),
+          ...(Array.isArray(upcomingContests) ? upcomingContests : [])
+        ]);
         setError(null);
       } catch (err) {
         console.error('Error fetching contests:', err);
@@ -45,14 +44,30 @@ const Contests = () => {
     }
   };
 
-  if (loading) return <div>Loading contests...</div>;
-  if (error) return <div className="error-message">{error}</div>;
-  if (!contests.length) return <div>No contests available.</div>;
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3].map((n) => (
+          <ContestSkeleton key={n} />
+        ))}
+      </div>
+    );
+  }
 
-  const filteredContests = contests.filter(contest => contest.status === activeTab);
+  if (error) {
+    return (
+      <Alert severity="error" className="mb-4">
+        {error}
+      </Alert>
+    );
+  }
+
+  const filteredContests = contests.filter(contest => 
+    contest && contest.status && contest.status.toLowerCase() === activeTab
+  );
 
   return (
-    <div>
+    <div className="container mx-auto px-4 py-8">
       <Typography variant="h4" component="h1" className="mb-6">
         Coding Contests
       </Typography>
@@ -64,10 +79,10 @@ const Contests = () => {
         className="mb-6"
       >
         <ToggleButton value="upcoming">
-          Upcoming ({contests.filter(c => c.status === 'upcoming').length})
+          Upcoming ({contests.filter(c => c?.status?.toLowerCase() === 'upcoming').length})
         </ToggleButton>
         <ToggleButton value="active">
-          Active ({contests.filter(c => c.status === 'active').length})
+          Active ({contests.filter(c => c?.status?.toLowerCase() === 'active').length})
         </ToggleButton>
       </ToggleButtonGroup>
 

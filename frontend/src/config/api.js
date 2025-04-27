@@ -1,6 +1,22 @@
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://codefolio-gateway.onrender.com'
-  : 'http://localhost:8080';
+const API_BASE_URL = 'https://codefolio-gateway.onrender.com';
+
+const defaultHeaders = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+};
+
+const fetchWithConfig = async (url) => {
+  const response = await fetch(url, {
+    headers: defaultHeaders,
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  return response.json();
+};
 
 export const API_URLS = {
   contests: {
@@ -18,5 +34,6 @@ export const API_URLS = {
 };
 
 export const getApiUrl = (path) => `${API_BASE_URL}${path}`;
+export const fetchApi = fetchWithConfig;
 
 export default API_BASE_URL; 
