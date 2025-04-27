@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "CodeFolio",
+  "name": "CodeFolio - Programming Contest Platform",
   "icons": [
     {
       "src": "favicon.ico",
